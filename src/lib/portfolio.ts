@@ -1,0 +1,124 @@
+import { Brain, Globe, Smartphone, TrendingUp, Cpu, Shield, Database, Rocket } from "lucide-react";
+
+export const projects = [
+  {
+    slug: "nexus-ai-engine",
+    title: "Nexus AI Engine",
+    category: "AI Automation",
+    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&q=80",
+    desc: "A neural-powered enterprise workflow automation system for global logistics.",
+    fullDesc: "Nexus AI is a revolutionary automation engine that utilizes custom-trained Transformer models to predict supply chain bottlenecks before they occur. It handles thousands of concurrent data streams to optimize routing and inventory in real-time.",
+    client: "Global Logistics Corp",
+    year: "2024",
+    tech: ["Python", "TensorFlow", "Kubernetes", "Redis"],
+    stats: { efficiency: "+45%", cost: "-30%" }
+  },
+  {
+    slug: "alpha-trade-pro",
+    title: "AlphaTrade Pro",
+    category: "Trading Tech",
+    image: "/alphatrade-pro.png",
+    desc: "High-frequency algorithmic trading dashboard with millisecond execution.",
+    fullDesc: "Built for institutional traders in the PMEX and PSX markets, AlphaTrade Pro provides a low-latency environment for executing complex arbitrage strategies with integrated risk management AI.",
+    client: "Horizon Capital",
+    year: "2023",
+    tech: ["C++", "Next.js", "WebSockets", "Rust"],
+    stats: { latency: "0.8ms", uptime: "99.99%" }
+  },
+  {
+    slug: "zenith-web-ecosystem",
+    title: "Zenith Ecosystem",
+    category: "Web Development",
+    image: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&q=80",
+    desc: "Cinematic digital presence for a luxury real estate conglomerate.",
+    fullDesc: "Zenith is a multi-tenant web platform that leverages WebGL and 3D Spline scenes to provide immersive virtual property tours. It features a custom headless CMS for lightning-fast content delivery.",
+    client: "Zenith Properties",
+    year: "2024",
+    tech: ["Next.js 15", "Three.js", "Sanity CMS", "Vercel"],
+    stats: { speed: "100/100", seo: "Rank #1" }
+  },
+  {
+    slug: "mobi-health-ai",
+    title: "MobiHealth AI",
+    category: "Mobile App",
+    image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?auto=format&fit=crop&q=80",
+    desc: "Predictive healthcare app with biometric data integration.",
+    fullDesc: "MobiHealth AI uses on-device machine learning to analyze health metrics from wearable devices. It provides early warning signs for cardiac anomalies and personalized wellness roadmaps.",
+    client: "Vitality Labs",
+    year: "2023",
+    tech: ["React Native", "CoreML", "HealthKit", "Firebase"],
+    stats: { users: "500k+", accuracy: "94%" }
+  },
+  {
+    slug: "crypto-vault-os",
+    title: "CryptoVault OS",
+    category: "Blockchain",
+    image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80",
+    desc: "Institutional-grade digital asset custody and security layer.",
+    fullDesc: "A secure operating system for managing multi-signature wallets and institutional DeFi deployments. It features biometric hardware-security-module (HSM) integration.",
+    client: "SecureFinance",
+    year: "2024",
+    tech: ["Solidity", "Rust", "TypeScript", "AWS Nitro"],
+    stats: { assets: "$2B+", security: "Level 4" }
+  },
+  {
+    slug: "sentinel-seo-engine",
+    title: "Sentinel SEO",
+    category: "Digital Strategy",
+    image: "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?auto=format&fit=crop&q=80",
+    desc: "AI-driven content optimization and search authority platform.",
+    fullDesc: "Sentinel analyzes millions of search queries to generate semantic content blueprints. It automates technical SEO audits and backlink profile management for high-growth startups.",
+    client: "GrowthTech Inc",
+    year: "2023",
+    tech: ["Python", "OpenAI API", "PostgreSQL", "Next.js"],
+    stats: { traffic: "+300%", authority: "+40pts" }
+  },
+  {
+    slug: "vision-retail-ai",
+    title: "VisionRetail AI",
+    category: "Computer Vision",
+    image: "https://images.unsplash.com/photo-1556740738-b6a63e27c4df?auto=format&fit=crop&q=80",
+    desc: "In-store customer behavior analytics using real-time video processing.",
+    fullDesc: "VisionRetail transforms standard CCTV feeds into actionable heatmaps and demographic data. It helps retail managers optimize store layouts and staff allocation.",
+    client: "RetailPrime",
+    year: "2024",
+    tech: ["PyTorch", "OpenCV", "MQTT", "Grafana"],
+    stats: { conversions: "+18%", retention: "+12%" }
+  },
+  {
+    slug: "quantum-data-lake",
+    title: "Quantum Data Lake",
+    category: "Cloud Infra",
+    image: "/quantum-data-lake.png",
+    desc: "Scalable data warehouse for high-frequency analytical processing.",
+    fullDesc: "A cloud-native data lake capable of ingesting petabytes of unstructured data. It provides sub-second query performance for complex business intelligence reporting.",
+    client: "DataStream Systems",
+    year: "2023",
+    tech: ["Snowflake", "dbt", "Airflow", "Terraform"],
+    stats: { ingestion: "10TB/day", queries: "<200ms" }
+  },
+  {
+    slug: "aura-smart-home",
+    title: "Aura Smart Home",
+    category: "IoT Systems",
+    image: "https://images.unsplash.com/photo-1558002038-1055907df827?auto=format&fit=crop&q=80",
+    desc: "Edge-computed IoT ecosystem for high-end residential developments.",
+    fullDesc: "Aura provides a unified interface for managing lighting, climate, and security across large estates. It runs entirely on local edge servers for maximum privacy and low latency.",
+    client: "Elite Living",
+    year: "2024",
+    tech: ["Node-RED", "ESP32", "Docker", "Zigbee"],
+    stats: { nodes: "1000+", latency: "15ms" }
+  },
+  {
+    slug: "beacon-ad-network",
+    title: "Beacon Network",
+    category: "AdTech",
+    image: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80",
+    desc: "Privacy-first programmatic advertising engine for niche markets.",
+    fullDesc: "Beacon uses contextual intelligence rather than user tracking to deliver hyper-relevant ads. It provides advertisers with transparent, fraud-resistant attribution modeling.",
+    client: "NicheMedia Group",
+    year: "2023",
+    tech: ["Go", "ClickHouse", "ProtoBuf", "React"],
+    stats: { ctr: "+2.5%", fraud: "-95%" }
+  }
+];
