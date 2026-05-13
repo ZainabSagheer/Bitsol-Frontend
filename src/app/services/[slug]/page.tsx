@@ -1,7 +1,4 @@
-"use client";
-
-import { useParams, notFound } from "next/navigation";
-import { motion } from "framer-motion";
+import { notFound } from "next/navigation";
 import { services } from "@/lib/services";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { ContactForm } from "@/components/ContactForm";
@@ -9,9 +6,15 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 
-export default function ServiceDetailPage() {
-  const params = useParams();
-  const service = services.find((s) => s.slug === params.slug);
+export async function generateStaticParams() {
+  return services.map((service) => ({
+    slug: service.slug,
+  }));
+}
+
+export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const service = services.find((s) => s.slug === slug);
 
   if (!service) {
     notFound();
@@ -27,10 +30,7 @@ export default function ServiceDetailPage() {
         </Link>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-start mb-24">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
+          <div>
             <div className={`w-20 h-20 rounded-3xl bg-${service.color}/10 flex items-center justify-center mb-10`}>
               <Icon className={`w-10 h-10 text-${service.color}`} />
             </div>
@@ -49,20 +49,16 @@ export default function ServiceDetailPage() {
                 </div>
               ))}
             </div>
-          </motion.div>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
+          <div>
             <GlowingCard>
               <div className="p-10">
                 <h3 className="text-3xl font-bold mb-8 text-slate-900 dark:text-white text-center">Start Your Project</h3>
                 <ContactForm />
               </div>
             </GlowingCard>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

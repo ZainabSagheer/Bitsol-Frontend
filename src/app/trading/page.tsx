@@ -39,7 +39,7 @@ const tradingServices = [
 
 export default function TradingSolutionsPage() {
   return (
-    <div className="pt-32 pb-24 bg-[#050816]">
+    <div className="pt-32 pb-24 bg-white dark:bg-[#050816]">
       <div className="container mx-auto px-6">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mb-32">
           <div>
@@ -54,7 +54,7 @@ export default function TradingSolutionsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-5xl md:text-7xl font-bold mb-8 leading-tight"
+              className="text-5xl md:text-7xl font-bold mb-8 leading-tight text-slate-900 dark:text-white"
             >
               Precision <span className="text-gradient">Trading</span> Algorithms
             </motion.h1>
@@ -62,7 +62,7 @@ export default function TradingSolutionsPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="text-xl text-brand-muted leading-relaxed mb-10"
+              className="text-xl text-slate-600 dark:text-brand-muted leading-relaxed mb-10"
             >
               We bridge the gap between financial markets and advanced technology. Our trading solutions are built for speed, accuracy, and maximum ROI.
             </motion.p>
@@ -74,10 +74,10 @@ export default function TradingSolutionsPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative h-[400px] md:h-[600px] glass-card flex items-center justify-center border-brand-cyan/20 overflow-hidden"
+            className="relative h-[400px] md:h-[600px] rounded-2xl border border-slate-200 dark:border-brand-cyan/20 bg-slate-50 dark:bg-slate-900/60 dark:backdrop-blur-xl flex items-center justify-center overflow-hidden shadow-lg dark:shadow-none"
           >
             {/* Mock Chart Animation Placeholder */}
-            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1611974717482-98aa01374246?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-20" />
+            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1611974717482-98aa01374246?auto=format&fit=crop&q=80')] bg-cover bg-center opacity-10 dark:opacity-20" />
             <div className="relative z-10 w-full h-full p-8 flex flex-col justify-end">
                <div className="h-64 flex items-end gap-2">
                   {[40, 70, 45, 90, 65, 80, 100, 75, 85, 60].map((h, i) => (
@@ -86,7 +86,7 @@ export default function TradingSolutionsPage() {
                       initial={{ height: 0 }}
                       animate={{ height: `${h}%` }}
                       transition={{ duration: 1, delay: i * 0.1, repeat: Infinity, repeatType: "reverse" }}
-                      className="flex-1 bg-brand-cyan/40 rounded-t-sm"
+                      className="flex-1 bg-brand-cyan/30 dark:bg-brand-cyan/40 rounded-t-sm"
                     />
                   ))}
                </div>
@@ -107,11 +107,11 @@ export default function TradingSolutionsPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: i * 0.1 }}
-              className="p-8 border-l border-white/10 hover:border-brand-cyan transition-colors"
+              className="p-8 border-l border-slate-200 dark:border-white/10 hover:border-brand-cyan transition-colors"
             >
               <service.icon className="w-10 h-10 text-brand-cyan mb-6" />
-              <h3 className="text-2xl font-bold mb-4">{service.title}</h3>
-              <p className="text-brand-muted leading-relaxed">
+              <h3 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">{service.title}</h3>
+              <p className="text-slate-500 dark:text-brand-muted leading-relaxed">
                 {service.desc}
               </p>
             </motion.div>

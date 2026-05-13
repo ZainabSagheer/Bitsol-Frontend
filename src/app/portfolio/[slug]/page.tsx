@@ -1,16 +1,19 @@
-"use client";
-
-import { useParams, notFound } from "next/navigation";
-import { motion } from "framer-motion";
+import { notFound } from "next/navigation";
 import { projects } from "@/lib/portfolio";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Calendar, User, Tag } from "lucide-react";
 
-export default function ProjectDetailPage() {
-  const params = useParams();
-  const project = projects.find((p) => p.slug === params.slug);
+export async function generateStaticParams() {
+  return projects.map((project) => ({
+    slug: project.slug,
+  }));
+}
+
+export default async function ProjectDetailPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const project = projects.find((p) => p.slug === slug);
 
   if (!project) {
     notFound();
@@ -25,11 +28,7 @@ export default function ProjectDetailPage() {
 
         {/* Project Hero */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mb-24">
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="lg:col-span-8"
-          >
+          <div className="lg:col-span-8">
             <h1 className="text-5xl md:text-7xl font-bold mb-8 text-slate-900 dark:text-white">
               {project.title}<span className="text-brand-cyan">.</span>
             </h1>
@@ -44,11 +43,11 @@ export default function ProjectDetailPage() {
                 <Calendar className="w-4 h-4" /> {project.year}
               </div>
             </div>
-            
+
             <div className="relative aspect-video rounded-3xl overflow-hidden mb-12 border border-white/10 shadow-2xl">
-              <img 
-                src={project.image} 
-                alt={project.title} 
+              <img
+                src={project.image}
+                alt={project.title}
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/40 to-transparent" />
@@ -58,14 +57,9 @@ export default function ProjectDetailPage() {
             <p className="text-xl text-black dark:text-brand-muted leading-relaxed mb-12">
               {project.fullDesc}
             </p>
-          </motion.div>
+          </div>
 
-          <motion.div 
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-4 space-y-8"
-          >
+          <div className="lg:col-span-4 space-y-8">
             <GlowingCard>
               <div className="p-8">
                 <h4 className="text-xl font-bold mb-6 border-b border-white/10 pb-4">Tech Stack</h4>
@@ -96,7 +90,7 @@ export default function ProjectDetailPage() {
             <Button variant="brand" className="w-full py-8 text-xl font-bold rounded-2xl group">
               View Case Study <ExternalLink className="ml-2 w-5 h-5 transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" />
             </Button>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>
