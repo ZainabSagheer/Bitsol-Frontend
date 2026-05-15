@@ -53,7 +53,7 @@ export const metadata: Metadata = {
       "Full-service AI digital marketing agency offering SEO, chatbot development, Meta ads, automation and growth marketing for businesses in Pakistan and globally.",
     images: [
       {
-        url: "https://bitsolmarketing.com/og-image.png",
+        url: "https://bitsolmarketing.com/opengraph-image",
         width: 1200,
         height: 630,
         alt: "BITSOL Marketing — AI Digital Marketing Agency",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     title: "BITSOL Marketing | AI Digital Marketing Agency",
     description:
       "AI SEO, chatbot development, Meta ads & automation for businesses in Pakistan and worldwide.",
-    images: ["https://bitsolmarketing.com/og-image.png"],
+    images: ["https://bitsolmarketing.com/opengraph-image"],
   },
   robots: {
     index: true,
