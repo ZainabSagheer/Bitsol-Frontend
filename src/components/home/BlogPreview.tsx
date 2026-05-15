@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { GlowingCard } from "@/components/ui/glowing-card";
@@ -16,7 +17,7 @@ type Post = {
   createdAt: Date;
 };
 
-function formatDate(date: Date): string {
+function formatDate(date: Date | string): string {
   return new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
@@ -28,7 +29,20 @@ function stripHtml(html: string): string {
   return html.replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
 }
 
-export default function BlogPreview({ posts }: { posts: Post[] }) {
+export default function BlogPreview({ posts: initialPosts }: { posts: Post[] }) {
+  const [posts, setPosts] = useState<Post[]>(initialPosts);
+
+  useEffect(() => {
+    if (initialPosts.length > 0) return;
+    fetch("/api/blog?limit=3")
+      .then((r) => r.json())
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) setPosts(data);
+        else if (data?.posts?.length > 0) setPosts(data.posts);
+      })
+      .catch(() => {});
+  }, [initialPosts.length]);
+
   if (posts.length === 0) return null;
 
   return (
@@ -92,7 +106,6 @@ export default function BlogPreview({ posts }: { posts: Post[] }) {
                         </span>
                       </div>
                       <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/80 via-transparent to-transparent" />
-                      {/* Tag badge */}
                       <div className="absolute bottom-4 left-4">
                         <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-brand-cyan bg-brand-dark/60 backdrop-blur-sm px-3 py-1.5 rounded-full border border-brand-cyan/30">
                           <Tag className="w-2.5 h-2.5" />

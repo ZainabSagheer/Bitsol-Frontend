@@ -1,11 +1,15 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const { searchParams } = new URL(req.url);
+    const limit = parseInt(searchParams.get("limit") ?? "100", 10);
+
     const posts = await prisma.blog.findMany({
       where: { published: true },
       orderBy: { createdAt: "desc" },
+      take: limit,
       select: {
         id: true,
         title: true,
@@ -13,6 +17,7 @@ export async function GET() {
         author: true,
         image: true,
         excerpt: true,
+        content: true,
         tags: true,
         createdAt: true,
       },

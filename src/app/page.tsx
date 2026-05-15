@@ -8,6 +8,8 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 
+export const revalidate = 3600;
+
 export default async function Home() {
   let blogPosts: {
     id: string;
