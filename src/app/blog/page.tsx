@@ -5,7 +5,7 @@ import { ArrowRight, Calendar, User, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Blog | AI Marketing Insights & SEO Strategies",

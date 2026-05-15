@@ -6,7 +6,7 @@ import { ContactForm } from "@/components/ContactForm";
 import { GlowingCard } from "@/components/ui/glowing-card";
 import type { Metadata } from "next";
 
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
