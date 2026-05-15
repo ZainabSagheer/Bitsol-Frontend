@@ -24,7 +24,9 @@ jobs:
       - name: Build Next.js app
         run: node node_modules/next/dist/bin/next build
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          # Use a placeholder DB URL at build time — homepage is force-dynamic
+          # so no DB queries run during build. Real URL is written to .env below.
+          DATABASE_URL: "mongodb+srv://placeholder:placeholder@placeholder.mongodb.net/bitsol"
           BLOG_API_KEY: ${{ secrets.BLOG_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NEXT_PUBLIC_SITE_URL: https://bitsolmarketing.com
