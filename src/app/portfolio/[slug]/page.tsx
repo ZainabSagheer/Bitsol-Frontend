@@ -4,6 +4,7 @@ import { GlowingCard } from "@/components/ui/glowing-card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink, Calendar, User, Tag } from "lucide-react";
+import Image from "next/image";
 
 export async function generateStaticParams() {
   return projects.map((project) => ({
@@ -45,10 +46,11 @@ export default async function ProjectDetailPage({ params }: { params: Promise<{ 
             </div>
 
             <div className="relative aspect-video rounded-3xl overflow-hidden mb-12 border border-white/10 shadow-2xl">
-              <img
+              <Image
                 src={project.image}
                 alt={project.title}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-brand-dark/40 to-transparent" />
             </div>

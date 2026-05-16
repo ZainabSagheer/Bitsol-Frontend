@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { BookOpen, Users, Star, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import Image from "next/image";
 
 const courses = [
   {
@@ -70,10 +71,11 @@ export default function CoursesPage() {
             className="flex flex-col overflow-hidden group rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900/60 dark:backdrop-blur-xl hover:border-brand-purple/50 transition-all shadow-lg dark:shadow-none"
           >
             <div className="h-60 relative overflow-hidden">
-              <img
+              <Image
                 src={course.image}
                 alt={course.title}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                fill
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
               />
               <div className="absolute top-4 left-4 flex gap-2">
                 {course.tags.map((tag, j) => (
