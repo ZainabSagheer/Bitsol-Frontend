@@ -57,23 +57,67 @@ jobs:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
-      - name: Ensure target directory exists
+      - name: Setup SSH and SCP Wrappers
         env:
-          SSHPASS: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
+          HOSTINGER_SSH_KEY: ${{ secrets.HOSTINGER_SSH_KEY }}
+          HOSTINGER_SSH_PASSWORD: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
         run: |
-          sshpass -e ssh -o StrictHostKeyChecking=no -p 65002 u293105347@92.113.19.228 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          
+          # If SSH Key is provided, save it
+          if [ -n "$HOSTINGER_SSH_KEY" ]; then
+            echo "$HOSTINGER_SSH_KEY" > ~/.ssh/id_rsa
+            chmod 600 ~/.ssh/id_rsa
+            echo "✅ Configured SSH key-based authentication."
+          fi
+          
+          # If SSH Password is provided, save it
+          if [ -n "$HOSTINGER_SSH_PASSWORD" ]; then
+            echo "$HOSTINGER_SSH_PASSWORD" > ~/.ssh/ssh_pass
+            chmod 600 ~/.ssh/ssh_pass
+            echo "✅ Configured SSH password-based authentication."
+          fi
+          
+          # Create ssh_wrapper.sh
+          cat << 'EOF' > ~/.ssh/ssh_wrapper.sh
+          #!/bin/bash
+          if [ -f ~/.ssh/id_rsa ]; then
+            ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -p 65002 "$@"
+          elif [ -f ~/.ssh/ssh_pass ]; then
+            sshpass -f ~/.ssh/ssh_pass ssh -o StrictHostKeyChecking=no -p 65002 "$@"
+          else
+            echo "Error: No SSH Key (HOSTINGER_SSH_KEY) or Password (HOSTINGER_SSH_PASSWORD) provided in secrets."
+            exit 1
+          fi
+          EOF
+          chmod +x ~/.ssh/ssh_wrapper.sh
+          
+          # Create scp_wrapper.sh
+          cat << 'EOF' > ~/.ssh/scp_wrapper.sh
+          #!/bin/bash
+          if [ -f ~/.ssh/id_rsa ]; then
+            scp -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no -P 65002 "$@"
+          elif [ -f ~/.ssh/ssh_pass ]; then
+            sshpass -f ~/.ssh/ssh_pass scp -o StrictHostKeyChecking=no -P 65002 "$@"
+          else
+            echo "Error: No SSH Key (HOSTINGER_SSH_KEY) or Password (HOSTINGER_SSH_PASSWORD) provided in secrets."
+            exit 1
+          fi
+          EOF
+          chmod +x ~/.ssh/scp_wrapper.sh
+
+      - name: Ensure target directory exists
+        run: |
+          ~/.ssh/ssh_wrapper.sh u293105347@92.113.19.228 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
 
       - name: Upload tarball to Hostinger
-        env:
-          SSHPASS: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
         run: |
-          sshpass -e scp -o StrictHostKeyChecking=no -P 65002 deploy.tar.gz u293105347@92.113.19.228:/home/u293105347/domains/bitsolmarketing.com/
+          ~/.ssh/scp_wrapper.sh deploy.tar.gz u293105347@92.113.19.228:/home/u293105347/domains/bitsolmarketing.com/
 
       - name: Extract and finalize on Hostinger
-        env:
-          SSHPASS: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
         run: |
-          sshpass -e ssh -o StrictHostKeyChecking=no -p 65002 u293105347@92.113.19.228 << 'EOF'
+          ~/.ssh/ssh_wrapper.sh u293105347@92.113.19.228 << 'EOF'
             set -e
             DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
             TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
