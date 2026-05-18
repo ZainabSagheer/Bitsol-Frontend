@@ -3,18 +3,32 @@
 import { useState, useEffect } from "react";
 import { useTheme } from "next-themes";
 import { SplineScene } from "@/components/ui/splite";
-import { Card } from "@/components/ui/card";
 import { Spotlight } from "@/components/ui/spotlight";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
- 
+
 export function SplineSceneBasic() {
   const { theme } = useTheme();
   const [mounted, setMounted] = useState(false);
+  const [showSpline, setShowSpline] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    // Skip the heavy 3D scene on small screens — saves ~800KB of JS + the scene file
+    if (typeof window !== "undefined" && window.matchMedia("(max-width: 1024px)").matches) {
+      return;
+    }
+    // Defer Spline until the browser is idle so it doesn't block first paint / LCP
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number };
+    const idle = w.requestIdleCallback
+      ? w.requestIdleCallback(() => setShowSpline(true), { timeout: 2500 })
+      : window.setTimeout(() => setShowSpline(true), 1500);
+    return () => {
+      const w = window as Window & { cancelIdleCallback?: (id: number) => void };
+      if (w.cancelIdleCallback) w.cancelIdleCallback(idle as number);
+      else window.clearTimeout(idle as number);
+    };
   }, []);
 
   return (
@@ -53,10 +67,12 @@ export function SplineSceneBasic() {
 
         {/* Right content */}
         <div className="flex-1 relative">
-          <SplineScene 
-            scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
-            className="w-full h-full"
-          />
+          {showSpline && (
+            <SplineScene
+              scene="https://prod.spline.design/kZDDjO5HuC9GJUM2/scene.splinecode"
+              className="w-full h-full"
+            />
+          )}
         </div>
       </div>
     </div>

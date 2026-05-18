@@ -20,12 +20,17 @@ export function Entropy({ className = "" }: EntropyProps) {
     if (!mounted) return
     const canvas = canvasRef.current
     if (!canvas) return
-    
+
+    // Skip entirely on small screens and on devices that prefer reduced motion
+    const isSmallScreen = window.matchMedia('(max-width: 768px)').matches
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (isSmallScreen || prefersReducedMotion) return
+
     const ctx = canvas.getContext('2d')
     if (!ctx) return
 
     const handleResize = () => {
-      const dpr = window.devicePixelRatio || 1
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5)
       canvas.width = window.innerWidth * dpr
       canvas.height = window.innerHeight * dpr
       ctx.scale(dpr, dpr)
@@ -108,7 +113,8 @@ export function Entropy({ className = "" }: EntropyProps) {
     }
 
     const particles: Particle[] = []
-    const spacing = 40
+    // Wider spacing on tablets cuts the particle count ~2x without changing the look
+    const spacing = window.innerWidth < 1280 ? 60 : 40
     const cols = Math.ceil(width / spacing)
     const rows = Math.ceil(height / spacing)
 
@@ -132,10 +138,14 @@ export function Entropy({ className = "" }: EntropyProps) {
     }
 
     let time = 0
-    let animationId: number
-    
+    let animationId: number | null = null
+    let paused = document.hidden
+
     function animate() {
-      if (!ctx || !canvas) return;
+      if (paused || !ctx || !canvas) {
+        animationId = null
+        return
+      }
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       if (time % 60 === 0) updateNeighbors()
 
@@ -160,13 +170,22 @@ export function Entropy({ className = "" }: EntropyProps) {
       animationId = requestAnimationFrame(animate)
     }
 
-    animate()
+    const handleVisibilityChange = () => {
+      paused = document.hidden
+      if (!paused && animationId === null) {
+        animationId = requestAnimationFrame(animate)
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    animationId = requestAnimationFrame(animate)
 
     return () => {
       window.removeEventListener('resize', handleResize)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
       if (animationId) cancelAnimationFrame(animationId)
     }
-  }, [mounted])
+  }, [mounted, theme])
 
   if (!mounted) return null
 

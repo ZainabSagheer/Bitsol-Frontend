@@ -10,7 +10,7 @@ import { CheckCircle2 } from "lucide-react";
 import Script from "next/script";
 import { prisma } from "@/lib/prisma";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 600;
 
 const homepageFAQ = [
   {
