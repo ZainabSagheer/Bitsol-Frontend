@@ -54,40 +54,20 @@ jobs:
           cd .next/standalone
           tar -czf ../../deploy.tar.gz .
 
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
       - name: Ensure target directory exists
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 92.113.19.228
-          username: u293105347
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: 65002
-          use_insecure_cipher: true
-          debug: true
-          script: |
-            mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs
+        run: |
+          sshpass -p "${{ secrets.HOSTINGER_SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -p 65002 u293105347@92.113.19.228 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
 
       - name: Upload tarball to Hostinger
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: 92.113.19.228
-          username: u293105347
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: 65002
-          use_insecure_cipher: true
-          debug: true
-          source: "deploy.tar.gz"
-          target: /home/u293105347/domains/bitsolmarketing.com/
+        run: |
+          sshpass -p "${{ secrets.HOSTINGER_SSH_PASSWORD }}" scp -o StrictHostKeyChecking=no -P 65002 deploy.tar.gz u293105347@92.113.19.228:/home/u293105347/domains/bitsolmarketing.com/
 
       - name: Extract and finalize on Hostinger
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: 92.113.19.228
-          username: u293105347
-          password: ${{ secrets.HOSTINGER_SSH_PASSWORD }}
-          port: 65002
-          use_insecure_cipher: true
-          debug: true
-          script: |
+        run: |
+          sshpass -p "${{ secrets.HOSTINGER_SSH_PASSWORD }}" ssh -o StrictHostKeyChecking=no -p 65002 u293105347@92.113.19.228 << 'EOF'
             set -e
             DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
             TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
@@ -112,3 +92,4 @@ jobs:
             echo "Entry point: $DEPLOY_DIR/server.js"
             ls -lh $DEPLOY_DIR/server.js
             ls -lh $DEPLOY_DIR/tmp/restart.txt
+          EOF
