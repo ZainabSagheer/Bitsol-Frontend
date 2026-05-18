@@ -99,27 +99,16 @@ jobs:
             tar -xzf $TAR_FILE -C $DEPLOY_DIR
             rm -f $TAR_FILE
 
-            # Multi-strategy restart — covers all known Hostinger Node.js setups
-            # 1. Phusion Passenger restart trigger (creates tmp/restart.txt)
+            # Phusion Passenger graceful-restart signal
+            # Passenger watches tmp/restart.txt and restarts workers on mtime change,
+            # without killing the running process first (avoids 503 gap).
             mkdir -p $DEPLOY_DIR/tmp
             touch $DEPLOY_DIR/tmp/restart.txt
-            touch $DEPLOY_DIR/tmp/always_restart.txt
 
-            # 2. Update mtime on entry file (some process managers watch this)
-            touch $DEPLOY_DIR/server.js
-
-            # 3. Kill any stuck Node processes owned by this user so a fresh one starts
-            pkill -u u293105347 -f "node.*server.js" 2>/dev/null || true
-            pkill -u u293105347 -f "next-server" 2>/dev/null || true
-
-            # 4. Final modification trigger
+            # Also touch the entry file for any process manager that watches it
             touch $DEPLOY_DIR/server.js
 
             echo "Files deployed at $(date)"
             echo "Entry point: $DEPLOY_DIR/server.js"
             ls -lh $DEPLOY_DIR/server.js
-            ls -lh $DEPLOY_DIR/tmp/restart.txt 2>/dev/null || true
-
-            # Give the process manager 5 seconds to spin up, then health-check
-            sleep 5
-            curl -s -o /dev/null -w "Local health check: HTTP %{http_code}\n" -m 10 http://127.0.0.1:3000/ 2>&1 || echo "Local health check failed — Passenger may use a different port"
+            ls -lh $DEPLOY_DIR/tmp/restart.txt
