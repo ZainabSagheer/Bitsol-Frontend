@@ -23,8 +23,13 @@ export async function GET(req: Request) {
       },
     });
     return NextResponse.json(posts);
-  } catch {
-    return NextResponse.json({ error: "Failed to fetch posts" }, { status: 500 });
+  } catch (err: unknown) {
+    const errorDetails = err instanceof Error ? err.message : String(err);
+    console.error("[GET /api/blog] Error fetching posts:", err);
+    return NextResponse.json({ 
+      error: "Failed to fetch posts", 
+      details: errorDetails 
+    }, { status: 500 });
   }
 }
 
