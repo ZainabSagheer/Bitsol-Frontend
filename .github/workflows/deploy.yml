@@ -1,11 +1,11 @@
-name: Build & Deploy to Hostinger
+name: Build Check
 
 on:
   push:
     branches: [main]
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,74 +27,8 @@ jobs:
       - name: Build Next.js app
         run: node node_modules/next/dist/bin/next build
         env:
-          # Use a placeholder DB URL at build time — homepage is force-dynamic
-          # so no DB queries run during build. Real URL is written to .env below.
           DATABASE_URL: "mongodb+srv://placeholder:placeholder@placeholder.mongodb.net/bitsol"
           BLOG_API_KEY: ${{ secrets.BLOG_API_KEY }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NEXT_PUBLIC_SITE_URL: https://bitsolmarketing.com
           NEXT_PUBLIC_API_URL: https://admin.bitsolmarketing.com
-
-      - name: Prepare standalone bundle
-        run: |
-          cp -r .next/static .next/standalone/.next/static
-          cp -r public .next/standalone/public
-
-      - name: Write .env to standalone
-        run: |
-          echo "NODE_ENV=production" > .next/standalone/.env
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .next/standalone/.env
-          echo "BLOG_API_KEY=${{ secrets.BLOG_API_KEY }}" >> .next/standalone/.env
-          echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .next/standalone/.env
-          echo "NEXT_PUBLIC_SITE_URL=https://bitsolmarketing.com" >> .next/standalone/.env
-          echo "NEXT_PUBLIC_API_URL=https://admin.bitsolmarketing.com" >> .next/standalone/.env
-
-      - name: Create deployment tarball
-        run: |
-          cd .next/standalone
-          tar -czf ../../deploy.tar.gz .
-
-      - name: Setup SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
-
-      - name: Add Hostinger to known hosts
-        run: ssh-keyscan -p 65002 145.79.30.66 >> ~/.ssh/known_hosts || true
-
-      - name: Ensure target directory exists
-        run: |
-          ssh -o StrictHostKeyChecking=no -p 65002 u293105347@145.79.30.66 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
-
-      - name: Upload tarball to Hostinger
-        run: |
-          scp -o StrictHostKeyChecking=no -P 65002 deploy.tar.gz u293105347@145.79.30.66:/home/u293105347/domains/bitsolmarketing.com/
-
-      - name: Extract and finalize on Hostinger
-        run: |
-          ssh -o StrictHostKeyChecking=no -p 65002 u293105347@145.79.30.66 << 'EOF'
-            set -e
-            DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
-            TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
-
-            # Swap in new files
-            rm -rf ${DEPLOY_DIR}_old
-            mv $DEPLOY_DIR ${DEPLOY_DIR}_old 2>/dev/null || true
-            mkdir -p $DEPLOY_DIR
-            tar -xzf $TAR_FILE -C $DEPLOY_DIR
-            rm -f $TAR_FILE
-
-            # Phusion Passenger graceful-restart signal
-            # Passenger watches tmp/restart.txt and restarts workers on mtime change,
-            # without killing the running process first (avoids 503 gap).
-            mkdir -p $DEPLOY_DIR/tmp
-            touch $DEPLOY_DIR/tmp/restart.txt
-
-            # Also touch the entry file for any process manager that watches it
-            touch $DEPLOY_DIR/server.js
-
-            echo "Files deployed at $(date)"
-            echo "Entry point: $DEPLOY_DIR/server.js"
-            ls -lh $DEPLOY_DIR/server.js
-            ls -lh $DEPLOY_DIR/tmp/restart.txt
-          EOF
