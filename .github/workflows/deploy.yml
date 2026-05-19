@@ -10,18 +10,18 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
 
-      - name: Generate Prisma client
+      - name: Generate Prisma client (all binary targets)
         run: npx prisma generate
 
       - name: Build Next.js app
@@ -38,15 +38,28 @@ jobs:
           cp -r .next/static .next/standalone/.next/static
           cp -r public .next/standalone/public
           cp -r prisma .next/standalone/prisma || true
+          # Copy ALL Prisma engine binaries (all binaryTargets) built during CI
+          # so the tarball works on Hostinger without requiring prisma generate there.
+          mkdir -p .next/standalone/node_modules/.prisma/client
+          cp -r node_modules/.prisma/client/. .next/standalone/node_modules/.prisma/client/
+          mkdir -p .next/standalone/node_modules/@prisma/client
+          cp -r node_modules/@prisma/client/. .next/standalone/node_modules/@prisma/client/
 
+      # Pass secrets as env vars — never inline-substitute multiline secrets into shell scripts.
       - name: Write .env to standalone
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BLOG_API_KEY: ${{ secrets.BLOG_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
         run: |
-          echo "NODE_ENV=production" > .next/standalone/.env
-          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .next/standalone/.env
-          echo "BLOG_API_KEY=${{ secrets.BLOG_API_KEY }}" >> .next/standalone/.env
-          echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .next/standalone/.env
-          echo "NEXT_PUBLIC_SITE_URL=https://bitsolmarketing.com" >> .next/standalone/.env
-          echo "NEXT_PUBLIC_API_URL=https://admin.bitsolmarketing.com" >> .next/standalone/.env
+          {
+            echo "NODE_ENV=production"
+            printf 'DATABASE_URL=%s\n' "$DATABASE_URL"
+            printf 'BLOG_API_KEY=%s\n' "$BLOG_API_KEY"
+            printf 'RESEND_API_KEY=%s\n' "$RESEND_API_KEY"
+            echo "NEXT_PUBLIC_SITE_URL=https://bitsolmarketing.com"
+            echo "NEXT_PUBLIC_API_URL=https://admin.bitsolmarketing.com"
+          } > .next/standalone/.env
 
       - name: Create deployment tarball
         run: |
@@ -58,51 +71,43 @@ jobs:
         with:
           name: hostinger-deploy-bundle
           path: deploy.tar.gz
-          retention-days: 1
+          retention-days: 3
 
+      # Pass SSH key as env var — the heredoc approach breaks with multiline secrets.
       - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          cat << 'END_OF_KEY' > ~/.ssh/deploy_key.tmp
-          ${{ secrets.SSH_PRIVATE_KEY }}
-          END_OF_KEY
-          tr -d '\r' < ~/.ssh/deploy_key.tmp > ~/.ssh/deploy_key
-          echo "" >> ~/.ssh/deploy_key
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 65002 145.79.30.66 >> ~/.ssh/known_hosts
+          ssh-keyscan -p 65002 145.79.30.66 >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Ensure target directory exists
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -p 65002 u293105347@145.79.30.66 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -p 65002 \
+            u293105347@145.79.30.66 \
+            "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
 
       - name: Upload tarball to Hostinger
         run: |
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -P 65002 deploy.tar.gz u293105347@145.79.30.66:/home/u293105347/domains/bitsolmarketing.com/
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -P 65002 \
+            deploy.tar.gz \
+            u293105347@145.79.30.66:/home/u293105347/domains/bitsolmarketing.com/
 
-      - name: Extract and finalize on Hostinger
+      - name: Extract and restart on Hostinger
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -p 65002 u293105347@145.79.30.66 << 'EOF'
-            set -e
-            DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
-            TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
+          DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
+          TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
+          SSH="ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -p 65002 u293105347@145.79.30.66"
 
-            # Swap in new files
-            rm -rf ${DEPLOY_DIR}_old
-            mv $DEPLOY_DIR ${DEPLOY_DIR}_old 2>/dev/null || true
-            mkdir -p $DEPLOY_DIR
-            tar -xzf $TAR_FILE -C $DEPLOY_DIR
-            rm -f $TAR_FILE
+          # Atomic swap
+          $SSH "rm -rf ${DEPLOY_DIR}_old; mv $DEPLOY_DIR ${DEPLOY_DIR}_old 2>/dev/null || true; mkdir -p $DEPLOY_DIR"
+          $SSH "tar -xzf $TAR_FILE -C $DEPLOY_DIR && rm -f $TAR_FILE"
 
-            # Fix Prisma Engine on Hostinger
-            cd $DEPLOY_DIR
-            npm install prisma@6 @prisma/client@6
-            npx prisma generate
+          # Regenerate Prisma client for Hostinger's exact OS (belt-and-suspenders)
+          $SSH "cd $DEPLOY_DIR && npm install --no-save prisma@6 @prisma/client@6 2>/dev/null || true && npx prisma generate 2>/dev/null || true"
 
-            # Phusion Passenger graceful-restart signal
-            mkdir -p $DEPLOY_DIR/tmp
-            touch $DEPLOY_DIR/tmp/restart.txt
-            touch $DEPLOY_DIR/server.js
-
-            echo "Files deployed at $(date)"
-            echo "Entry point: $DEPLOY_DIR/server.js"
-          EOF
+          # Phusion Passenger graceful restart
+          $SSH "mkdir -p $DEPLOY_DIR/tmp && touch $DEPLOY_DIR/tmp/restart.txt"
+          $SSH "echo 'Deployed at $(date)'"

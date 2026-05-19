@@ -15,10 +15,17 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const post = await prisma.blog.findUnique({
-    where: { slug, published: true },
-    select: { title: true, metaDescription: true, excerpt: true, image: true },
-  });
+  
+  let post: any = null;
+  try {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://admin.bitsolmarketing.com";
+    const res = await fetch(`${apiUrl}/api/blogs/${slug}`);
+    if (res.ok) {
+      post = await res.json();
+    }
+  } catch (err) {
+    console.error("[Blog Meta] API connection failed:", err);
+  }
 
   if (!post) return {};
 
@@ -62,13 +69,17 @@ export default async function BlogPostPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  let post = null;
+  let post: any = null;
   try {
-    post = await prisma.blog.findUnique({
-      where: { slug, published: true },
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://admin.bitsolmarketing.com";
+    const res = await fetch(`${apiUrl}/api/blogs/${slug}`, {
+      next: { revalidate: 60 } // Revalidate every minute
     });
+    if (res.ok) {
+      post = await res.json();
+    }
   } catch (err) {
-    console.error("[Blog] DB connection failed:", err);
+    console.error("[Blog] API connection failed:", err);
   }
 
   if (!post) notFound();
@@ -82,7 +93,7 @@ export default async function BlogPostPage({
     description: post.metaDescription || post.excerpt || post.title,
     author: {
       "@type": "Organization",
-      name: post.author,
+      name: post.author?.name || post.author || "BITSOL Team",
       url: "https://bitsolmarketing.com",
     },
     publisher: {
@@ -93,8 +104,8 @@ export default async function BlogPostPage({
         url: "https://bitsolmarketing.com/logo.png",
       },
     },
-    datePublished: post.createdAt.toISOString(),
-    dateModified: post.updatedAt.toISOString(),
+    datePublished: new Date(post.createdAt).toISOString(),
+    dateModified: new Date(post.updatedAt).toISOString(),
     mainEntityOfPage: {
       "@type": "WebPage",
       "@id": `https://bitsolmarketing.com/blog/${slug}`,
@@ -133,7 +144,7 @@ export default async function BlogPostPage({
               </span>
               <span className="flex items-center gap-1.5 text-xs text-brand-muted">
                 <User className="w-3 h-3" />
-                {post.author}
+                {post.author?.name || post.author || "BITSOL Team"}
               </span>
               <span className="flex items-center gap-1.5 text-xs text-brand-muted">
                 <Clock className="w-3 h-3" />

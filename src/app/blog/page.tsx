@@ -52,26 +52,19 @@ export default async function BlogPage() {
     createdAt: Date;
   };
 
-  let posts: PostRow[] = [];
+  let posts: any[] = [];
 
   try {
-    posts = await prisma.blog.findMany({
-      where: { published: true },
-      orderBy: { createdAt: "desc" },
-      select: {
-        id: true,
-        title: true,
-        slug: true,
-        author: true,
-        image: true,
-        excerpt: true,
-        content: true,
-        tags: true,
-        createdAt: true,
-      },
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://admin.bitsolmarketing.com";
+    const res = await fetch(`${apiUrl}/api/blogs?published=true`, {
+      next: { revalidate: 60 } // Revalidate every minute
     });
+    
+    if (res.ok) {
+      posts = await res.json();
+    }
   } catch (err) {
-    console.error("[Blog] DB connection failed:", err);
+    console.error("[Blog] API connection failed:", err);
   }
 
   return (
@@ -150,7 +143,7 @@ export default async function BlogPage() {
                       <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-200 dark:border-white/10">
                         <span className="flex items-center gap-1.5 text-xs text-brand-muted">
                           <User className="w-3 h-3" />
-                          {post.author}
+                          {post.author?.name || post.author || "BITSOL Team"}
                         </span>
                         <span className="text-xs text-brand-muted">
                           {readTime(post.content)}
