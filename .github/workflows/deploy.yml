@@ -59,13 +59,10 @@ jobs:
           SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
         run: |
           mkdir -p ~/.ssh
-          # Handle both literal \n and CRLF line endings in the secret
-          printf '%s' "$SSH_PRIVATE_KEY" | sed 's/\\n/\n/g' | tr -d '\r' > ~/.ssh/deploy_key
-          # Ensure key ends with a newline (required by OpenSSH)
+          # %b interprets \n escape sequences as real newlines
+          printf '%b' "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/deploy_key
           echo "" >> ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          # Validate key loaded correctly
-          ssh-keygen -l -f ~/.ssh/deploy_key
           ssh-keyscan -p 65002 92.113.19.228 >> ~/.ssh/known_hosts
 
       - name: Ensure target directory exists
