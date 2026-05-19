@@ -1,11 +1,11 @@
-name: Build Check
+name: Build & Deploy to Hostinger
 
 on:
   push:
     branches: [main]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -32,3 +32,63 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           NEXT_PUBLIC_SITE_URL: https://bitsolmarketing.com
           NEXT_PUBLIC_API_URL: https://admin.bitsolmarketing.com
+
+      - name: Prepare standalone bundle
+        run: |
+          cp -r .next/static .next/standalone/.next/static
+          cp -r public .next/standalone/public
+
+      - name: Write .env to standalone
+        run: |
+          echo "NODE_ENV=production" > .next/standalone/.env
+          echo "DATABASE_URL=${{ secrets.DATABASE_URL }}" >> .next/standalone/.env
+          echo "BLOG_API_KEY=${{ secrets.BLOG_API_KEY }}" >> .next/standalone/.env
+          echo "RESEND_API_KEY=${{ secrets.RESEND_API_KEY }}" >> .next/standalone/.env
+          echo "NEXT_PUBLIC_SITE_URL=https://bitsolmarketing.com" >> .next/standalone/.env
+          echo "NEXT_PUBLIC_API_URL=https://admin.bitsolmarketing.com" >> .next/standalone/.env
+
+      - name: Create deployment tarball
+        run: |
+          cd .next/standalone
+          tar -czf ../../deploy.tar.gz .
+
+      - name: Setup SSH key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          echo "" >> ~/.ssh/deploy_key  # Force a trailing newline
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 65002 92.113.19.228 >> ~/.ssh/known_hosts
+
+      - name: Ensure target directory exists
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -p 65002 u293105347@92.113.19.228 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
+
+      - name: Upload tarball to Hostinger
+        run: |
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -P 65002 deploy.tar.gz u293105347@92.113.19.228:/home/u293105347/domains/bitsolmarketing.com/
+
+      - name: Extract and finalize on Hostinger
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/deploy_key -p 65002 u293105347@92.113.19.228 << 'EOF'
+            set -e
+            DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
+            TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
+
+            # Swap in new files
+            rm -rf ${DEPLOY_DIR}_old
+            mv $DEPLOY_DIR ${DEPLOY_DIR}_old 2>/dev/null || true
+            mkdir -p $DEPLOY_DIR
+            tar -xzf $TAR_FILE -C $DEPLOY_DIR
+            rm -f $TAR_FILE
+
+            # Phusion Passenger graceful-restart signal
+            mkdir -p $DEPLOY_DIR/tmp
+            touch $DEPLOY_DIR/tmp/restart.txt
+            touch $DEPLOY_DIR/server.js
+
+            echo "Files deployed at $(date)"
+            echo "Entry point: $DEPLOY_DIR/server.js"
+          EOF
