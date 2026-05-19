@@ -60,19 +60,19 @@ jobs:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
       - name: Add Hostinger to known hosts
-        run: ssh-keyscan -p 65002 92.113.19.228 >> ~/.ssh/known_hosts
+        run: ssh-keyscan -p 65002 145.79.30.66 >> ~/.ssh/known_hosts
 
       - name: Ensure target directory exists
         run: |
-          ssh -o StrictHostKeyChecking=no -p 65002 u293105347@92.113.19.228 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
+          ssh -o StrictHostKeyChecking=no -p 65002 u293105347@145.79.30.66 "mkdir -p /home/u293105347/domains/bitsolmarketing.com/public_nodejs"
 
       - name: Upload tarball to Hostinger
         run: |
-          scp -o StrictHostKeyChecking=no -P 65002 deploy.tar.gz u293105347@92.113.19.228:/home/u293105347/domains/bitsolmarketing.com/
+          scp -o StrictHostKeyChecking=no -P 65002 deploy.tar.gz u293105347@145.79.30.66:/home/u293105347/domains/bitsolmarketing.com/
 
       - name: Extract and finalize on Hostinger
         run: |
-          ssh -o StrictHostKeyChecking=no -p 65002 u293105347@92.113.19.228 << 'EOF'
+          ssh -o StrictHostKeyChecking=no -p 65002 u293105347@145.79.30.66 << 'EOF'
             set -e
             DEPLOY_DIR=/home/u293105347/domains/bitsolmarketing.com/public_nodejs
             TAR_FILE=/home/u293105347/domains/bitsolmarketing.com/deploy.tar.gz
